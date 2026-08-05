@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Диспетчерська — макет</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#151b23; --panel-2:#1b232d; --line:#252e3a;
+    --txt:#e6edf3; --muted:#8b98a9; --dim:#5d6b7d;
+    --accent:#3b82f6; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --violet:#a78bfa;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font:14px/1.45 -apple-system,"Segoe UI",Roboto,sans-serif;}
+  h1,h2,h3,h4{margin:0;font-weight:600}
+  .wrap{max-width:1500px;margin:0 auto;padding:24px 20px 80px}
+
+  /* ── шапка документа ── */
+  .doc-head{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;
+            padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:20px}
+  .doc-head p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+  .tabs{display:flex;gap:6px;background:var(--panel);padding:5px;border-radius:10px;border:1px solid var(--line)}
+  .tabs button{background:none;border:0;color:var(--muted);padding:8px 14px;border-radius:7px;
+               font:inherit;font-weight:500;cursor:pointer}
+  .tabs button:hover{color:var(--txt)}
+  .tabs button[aria-selected="true"]{background:var(--accent);color:#fff}
+
+  /* ── підписи подій ── */
+  .ev{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;
+      color:#93c5fd;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);
+      padding:1px 6px;border-radius:5px;white-space:nowrap;vertical-align:middle}
+  .ev.up{color:#fca5a5;background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.28)}
+  .ev.rest{color:#c4b5fd;background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.3)}
+  .legend{display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin:0 0 18px;
+          padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+          color:var(--muted);font-size:12.5px}
+
+  /* ── загальний каркас екрана ── */
+  .screen{display:none}
+  .screen.on{display:block}
+  .app{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel);
+       box-shadow:0 20px 50px rgba(0,0,0,.45)}
+  .topbar{display:flex;align-items:center;gap:20px;padding:12px 16px;background:var(--panel-2);
+          border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:650;letter-spacing:.2px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+  .kpis{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:6px 12px;min-width:92px}
+  .kpi b{display:block;font-size:19px;line-height:1.15}
+  .kpi span{font-size:11px;color:var(--muted)}
+  .kpi.bad b{color:var(--bad)} .kpi.ok b{color:var(--ok)} .kpi.warn b{color:var(--warn)}
+
+  .cols{display:grid;grid-template-columns:320px 1fr 340px;min-height:640px}
+  .col{border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+  .col:last-child{border-right:0}
+  .col-head{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line);
+            background:var(--panel-2);font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+  .col-head .ev{text-transform:none;letter-spacing:0;margin-left:auto}
+  .col-body{overflow:auto;flex:1;padding:10px}
+
+  /* ── картки замовлень ── */
+  .order{background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--dim);
+         border-radius:9px;padding:10px 11px;margin-bottom:8px;cursor:pointer}
+  .order:hover{border-color:#33415a}
+  .order.sel{border-color:var(--accent);border-left-color:var(--accent);background:#182231}
+  .order.new{border-left-color:var(--accent)}
+  .order.route{border-left-color:var(--warn)}
+  .order.late{border-left-color:var(--bad)}
+  .order.done{border-left-color:var(--ok);opacity:.62}
+  .o-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .o-num{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .o-time{margin-left:auto;font-size:11px;color:var(--dim)}
+  .o-time.late{color:var(--bad);font-weight:600}
+  .o-addr{font-weight:550;margin-bottom:3px}
+  .o-meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+  .chip{font-size:10.5px;padding:2px 7px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
+  .chip.b{background:rgba(59,130,246,.14);color:#93c5fd;border-color:transparent}
+  .chip.w{background:rgba(245,158,11,.14);color:#fcd34d;border-color:transparent}
+  .chip.g{background:rgba(34,197,94,.14);color:#86efac;border-color:transparent}
+  .chip.r{background:rgba(239,68,68,.14);color:#fca5a5;border-color:transparent}
+  .ava{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;
+       font-weight:700;color:#0d1117;flex:none}
+
+  /* ── мапа ── */
+  .map{flex:1;position:relative;background:#0f1621;overflow:hidden}
+  .map svg{position:absolute;inset:0;width:100%;height:100%}
+  .pin{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px}
+  .pin .bubble{background:#0f1621;border:1px solid var(--line);border-radius:20px;padding:3px 9px 3px 4px;
+               display:flex;align-items:center;gap:6px;font-size:11.5px;white-space:nowrap;
+               box-shadow:0 6px 16px rgba(0,0,0,.55)}
+  .pulse{width:12px;height:12px;border-radius:50%;background:var(--ok);
+         box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:p 2s infinite}
+  @keyframes p{70%{box-shadow:0 0 0 12px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+  .drop{position:absolute;transform:translate(-50%,-100%);font-size:20px;filter:drop-shadow(0 3px 5px #000)}
+  .map-foot{position:absolute;left:12px;bottom:12px;right:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .mchip{background:rgba(15,22,33,.92);border:1px solid var(--line);border-radius:8px;
+         padding:6px 10px;font-size:11.5px;color:var(--muted);backdrop-filter:blur(4px)}
+
+  /* ── чат ── */
+  .chat{display:flex;flex-direction:column;flex:1;min-height:0}
+  .msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:9px}
+  .m{max-width:82%;padding:7px 11px;border-radius:12px;font-size:13px;background:var(--panel-2);
+     border:1px solid var(--line)}
+  .m .who{font-size:10.5px;color:var(--muted);margin-bottom:2px;display:flex;gap:7px}
+  .m.me{align-self:flex-end;background:#1d3a63;border-color:#255089}
+  .m.sys{align-self:center;background:none;border:1px dashed var(--line);color:var(--muted);
+         font-size:11.5px;text-align:center;max-width:92%}
+  .composer{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--panel-2)}
+  .composer input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:8px;
+                  padding:9px 11px;color:var(--txt);font:inherit}
+  .composer button{background:var(--accent);border:0;color:#fff;border-radius:8px;padding:0 15px;
+                   font:inherit;font-weight:600;cursor:pointer}
+
+  /* ── картка замовлення праворуч ── */
+  .card{padding:14px;border-bottom:1px solid var(--line)}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:13px}
+  .row span{color:var(--muted)}
+  .steps{display:flex;flex-direction:column;gap:0;margin-top:10px}
+  .step{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;padding-bottom:12px;position:relative}
+  .step:before{content:"";position:absolute;left:6px;top:15px;bottom:0;width:1px;background:var(--line)}
+  .step:last-child:before{display:none}
+  .bul{width:13px;height:13px;border-radius:50%;border:2px solid var(--line);background:var(--panel);
+       flex:none;margin-top:2px;z-index:1}
+  .step.done .bul{background:var(--ok);border-color:var(--ok)}
+  .step.now .bul{background:var(--warn);border-color:var(--warn);box-shadow:0 0 0 3px rgba(245,158,11,.2)}
+  .step .t{color:var(--dim);font-size:11px}
+  .actions{display:flex;gap:8px;padding:12px 14px;flex-wrap:wrap}
+  .btn{flex:1;min-width:110px;background:var(--panel-2);border:1px solid var(--line);color:var(--txt);
+       padding:9px;border-radius:8px;font:inherit;font-weight:550;cursor:pointer}
+  .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.dan{color:#fca5a5}
+
+  /* ── телефони ── */
+  .phones{display:flex;gap:30px;flex-wrap:wrap;justify-content:center}
+  .phone{width:340px;border:8px solid #262e3a;border-radius:34px;background:var(--panel);overflow:hidden;
+         box-shadow:0 24px 60px rgba(0,0,0,.55)}
+  .ph-bar{background:var(--panel-2);padding:8px 16px;display:flex;justify-content:space-between;
+          font-size:11px;color:var(--muted);border-bottom:1px solid var(--line)}
+  .ph-body{height:600px;overflow:auto;display:flex;flex-direction:column}
+  .ph-map{height:190px;position:relative;background:#0f1621;flex:none}
+  .note{color:var(--muted);font-size:12.5px;text-align:center;max-width:340px;margin:14px auto 0}
+  .big-btn{margin:auto 14px 16px;padding:16px;border-radius:12px;background:var(--ok);color:#04240f;
+           border:0;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+
+  .hint{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--panel);
+        border:1px solid var(--line);color:var(--muted);font-size:12.5px}
+  .hint b{color:var(--txt)}
+  @media(max-width:1200px){.cols{grid-template-columns:1fr}.col{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="doc-head">
+    <div>
+      <h1>«Диспетчерська» — макет інтерфейсу</h1>
+      <p>Три клієнти, три сокет-з'єднання, один стан. Синім підписані події,
+         які сервер надсилає в цей блок, червоним — які клієнт надсилає серверу.</p>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-t="disp">Диспетчер</button>
+      <button role="tab" aria-selected="false" data-t="cour">Кур'єр</button>
+      <button role="tab" aria-selected="false" data-t="cli">Клієнт</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="ev">server → client</span> сервер надсилає в кімнату</span>
+    <span><span class="ev up">client → server</span> команда з ack</span>
+    <span><span class="ev rest">REST</span> звичайний HTTP</span>
+  </div>
+
+<!-- ══════════════ ДИСПЕТЧЕР ══════════════ -->
+<section class="screen on" id="disp">
+  <div class="app">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span> Диспетчерська · Квіти 24/7</div>
+      <span class="ev">sync.snapshot</span>
+      <span class="ev">sync.since {seq:8214}</span>
+      <div class="kpis">
+        <div class="kpi"><b>12</b><span>активних</span></div>
+        <div class="kpi bad"><b>2</b><span>прострочено</span></div>
+        <div class="kpi ok"><b>6/8</b><span>кур'єрів</span></div>
+        <div class="kpi warn"><b>34<small>хв</small></b><span>середнє</span></div>
+        <span class="ev" style="align-self:center">dashboard.metrics</span>
+      </div>
+    </div>
+
+    <div class="cols">
+
+      <!-- ЛІВА: черга замовлень -->
+      <div class="col">
+        <div class="col-head">Замовлення <span class="ev">order.created / order.updated</span></div>
+        <div class="col-body">
+          <div class="order new">
+            <div class="o-top"><span class="o-num">#0148</span><span class="chip b">новий</span>
+              <span class="o-time">2 хв тому</span></div>
+            <div class="o-addr">вул. Лісова, 12, кв. 45</div>
+            <div class="o-meta"><span>Анна К.</span><span>1 240 ₴ · картка</span></div>
+          </div>
+
+          <div class="order late">
+            <div class="o-top"><span class="o-num">#0143</span><span class="chip r">у дорозі</span>
+              <span class="o-time late">прострочка 12 хв</span></div>
+            <div class="o-addr">просп. Миру, 88, офіс 300</div>
+            <div class="o-meta">
+              <span class="ava" style="background:#f59e0b">І</span><span>Ігор · скутер</span>
+            </div>
+          </div>
+
+          <div class="order route sel">
+            <div class="o-top"><span class="o-num">#0145</span><span class="chip w">у дорозі</span>
+              <span class="o-time">до 14:30</span></div>
+            <div class="o-addr">вул. Гагаріна, 7, під'їзд 2</div>
+            <div class="o-meta">
+              <span class="ava" style="background:#22c55e">М</span><span>Марія · вело</span>
+              <span>ETA 9 хв</span>
+            </div>
+          </div>
+
+          <div class="order route">
+            <div class="o-top"><span class="o-num">#0146</span><span class="chip w">забрав</span>
+              <span class="o-time">до 15:00</span></div>
+            <div class="o-addr">вул. Садова, 21</div>
+            <div class="o-meta"><span class="ava" style="background:#3b82f6">Д</span><span>Дмитро · авто</span></div>
+          </div>
+
+          <div class="order new">
+            <div class="o-top"><span class="o-num">#0147</span><span class="chip b">призначено</span>
+              <span class="o-time">чекає прийняття 40 с</span></div>
+            <div class="o-addr">бул. Перемоги, 3</div>
+            <div class="o-meta"><span class="ava" style="background:#a78bfa">С</span><span>Сергій · пішки</span></div>
+          </div>
+
+          <div class="order done">
+            <div class="o-top"><span class="o-num">#0141</span><span class="chip g">доставлено</span>
+              <span class="o-time">13:52</span></div>
+            <div class="o-addr">вул. Кирилівська, 15</div>
+            <div class="o-meta"><span>за 26 хв · фото є</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ЦЕНТР: мапа -->
+      <div class="col">
+        <div class="col-head">Мапа <span class="ev">courier.location (throttle 3s)</span></div>
+        <div class="map">
+          <svg viewBox="0 0 800 620" preserveAspectRatio="xMidYMid slice">
+            <rect width="800" height="620" fill="#0f1621"/>
+            <g stroke="#1b2634" stroke-width="14">
+              <path d="M-20 140 H820"/><path d="M-20 330 H820"/><path d="M-20 500 H820"/>
+              <path d="M130 -20 V640"/><path d="M380 -20 V640"/><path d="M620 -20 V640"/>
+            </g>
+            <g stroke="#18212e" stroke-width="6">
+              <path d="M-20 230 H820"/><path d="M-20 420 H820"/>
+              <path d="M255 -20 V640"/><path d="M500 -20 V640"/><path d="M710 -20 V640"/>
+            </g>
+            <rect x="150" y="360" width="200" height="120" fill="#132018" opacity=".8" rx="6"/>
+            <rect x="530" y="160" width="160" height="140" fill="#131b26" opacity=".8" rx="6"/>
+            <!-- пройдений трек -->
+            <path d="M130 500 L130 330 L380 330 L380 230" stroke="#22c55e" stroke-width="4"
+                  fill="none" stroke-linecap="round" opacity=".85"/>
+            <!-- залишок маршруту -->
+            <path d="M380 230 L500 230 L500 140 L620 140" stroke="#22c55e" stroke-width="3"
+                  fill="none" stroke-dasharray="7 7" opacity=".55"/>
+          </svg>
+
+          <div class="pin" style="left:47.5%;top:37%">
+            <span class="pulse"></span>
+            <span class="bubble"><span class="ava" style="background:#22c55e">М</span>Марія · #0145 · 14 км/год</span>
+          </div>
+          <div class="pin" style="left:20%;top:70%">
+            <span class="bubble"><span class="ava" style="background:#f59e0b">І</span>Ігор · #0143 · стоїть 8 хв</span>
+          </div>
+          <div class="pin" style="left:75%;top:26%">
+            <span class="bubble"><span class="ava" style="background:#3b82f6">Д</span>Дмитро · вільний</span>
+          </div>
+          <div class="drop" style="left:77.5%;top:23%">📍</div>
+
+          <div class="map-foot">
+            <div class="mchip">🟢 трек пройдено</div>
+            <div class="mchip">⋯ залишок маршруту · OSRM</div>
+            <div class="mchip">геозона 150 м → «кур'єр поруч»</div>
+            <div class="mchip"><span class="ev rest">GET /orders/:id/track</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ПРАВА: картка + чат -->
+      <div class="col">
+        <div class="col-head">Замовлення #0145 <span class="ev">order.status_changed</span></div>
+        <div class="card">
+          <div class="row"><span>Клієнт</span><b>Анна Ковальова</b></div>
+          <div class="row"><span>Телефон</span><b>+380 67 123-45-67</b></div>
+          <div class="row"><span>Адреса</span><b>Гагаріна, 7, п. 2</b></div>
+          <div class="row"><span>Сума</span><b>1 240 ₴ · картка</b></div>
+          <div class="row"><span>Версія</span><b style="font-family:var(--mono);color:var(--muted)">v7</b></div>
+
+          <div class="steps">
+            <div class="step done"><span class="bul"></span><div>Створено <span class="t">13:58 · форма сайту</span></div></div>
+            <div class="step done"><span class="bul"></span><div>Призначено Марії <span class="t">14:01 · Ольга</span></div></div>
+            <div class="step done"><span class="bul"></span><div>Прийнято кур'єром <span class="t">14:02</span></div></div>
+            <div class="step done"><span class="bul"></span><div>Забрано <span class="t">14:09</span></div></div>
+            <div class="step now"><span class="bul"></span><div>У дорозі <span class="t">ETA 14:27 · 9 хв</span></div></div>
+            <div class="step"><span class="bul"></span><div>Доставлено</div></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn pri">Перепризначити <span class="ev up" style="margin-left:4px">order.assign</span></button>
+          <button class="btn dan">Скасувати</button>
+        </div>
+
+        <div class="col-head">Чат по замовленню <span class="ev">chat.message</span></div>
+        <div class="chat">
+          <div class="msgs">
+            <div class="m sys">Ольга призначила замовлення Марії · 14:01</div>
+            <div class="m"><div class="who"><b>Марія</b> кур'єр · 14:09</div>Забрала, букет цілий, виїжджаю</div>
+            <div class="m me"><div class="who"><b>Ви</b> · 14:10</div>Клієнтка просить подзвонити за 10 хвилин</div>
+            <div class="m"><div class="who"><b>Анна</b> клієнт · 14:14</div>Домофон не працює, наберіть</div>
+            <div class="m sys">Кур'єр за 150 м від адреси · 14:24</div>
+          </div>
+          <div class="composer">
+            <input placeholder="Повідомлення…">
+            <button>↑</button>
+          </div>
+          <div style="padding:0 10px 10px"><span class="ev up">chat.send {clientMsgId}</span> <span class="ev">chat.typing</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="hint">
+    <b>Що тут перевіряється архітектурно:</b> диспетчер тисне «Перепризначити» → команда з <code>version:7</code>
+    йде на інстанс&nbsp;#1 → транзакція в Postgres (замовлення + change_log) → публікація в Redis →
+    <b>інстанси #2 і #3</b> доставляють <code>order.status_changed</code> кур'єру та клієнту.
+    Якщо другий диспетчер паралельно надіслав свою команду з тією ж <code>version:7</code> — він отримає
+    <code>CONFLICT</code>, а не тихий перезапис.
+  </div>
+</section>
+
+<!-- ══════════════ КУР'ЄР ══════════════ -->
+<section class="screen" id="cour">
+  <div class="phones">
+
+    <div>
+      <div class="phone">
+        <div class="ph-bar"><span>14:24</span><span>Зміна 4:12 · 🔋 62%</span></div>
+        <div class="ph-body">
+          <div class="ph-map">
+            <svg viewBox="0 0 340 190" preserveAspectRatio="none">
+              <rect width="340" height="190" fill="#0f1621"/>
+              <g stroke="#1b2634" stroke-width="10">
+                <path d="M-10 60 H350"/><path d="M-10 140 H350"/><path d="M90 -10 V200"/><path d="M240 -10 V200"/>
+              </g>
+              <path d="M40 160 L90 160 L90 60 L240 60" stroke="#22c55e" stroke-width="3" fill="none"/>
+              <path d="M240 60 L300 60 L300 30" stroke="#22c55e" stroke-width="2.5"
+                    stroke-dasharray="6 6" fill="none" opacity=".6"/>
+            </svg>
+            <div class="pin" style="left:70%;top:32%"><span class="pulse"></span></div>
+            <div class="drop" style="left:88%;top:18%">📍</div>
+            <div class="mchip" style="position:absolute;left:10px;bottom:10px">
+              ETA 9 хв · 1,4 км
+            </div>
+          </div>
+
+          <div class="card" style="border-bottom:1px solid var(--line)">
+            <div class="o-top"><span class="o-num">#0145</span><span class="chip w">у дорозі</span>
+              <span class="o-time">до 14:30</span></div>
+            <div class="o-addr" style="font-size:16px;margin:6px 0">вул. Гагаріна, 7</div>
+            <div class="o-meta"><span>під'їзд 2, кв. 41 · поверх 5</span></div>
+            <div class="row" style="margin-top:8px"><span>Клієнт</span><b>Анна · +380 67 123-45-67</b></div>
+            <div class="row"><span>До оплати</span><b>оплачено карткою</b></div>
+            <div class="row"><span>Коментар</span><b style="text-align:right">Домофон не працює,<br>подзвонити</b></div>
+          </div>
+
+          <div class="card">
+            <div class="m" style="max-width:100%"><div class="who"><b>Ольга</b> диспетчер · 14:10</div>
+              Подзвони клієнтці за 10 хвилин</div>
+            <div style="margin-top:8px"><span class="ev">chat.message</span> <span class="ev up">chat.send</span></div>
+          </div>
+
+          <button class="big-btn">Доставлено &nbsp;→</button>
+          <div style="text-align:center;padding:0 0 14px">
+            <span class="ev up">order.setStatus {to:'delivered', point, version}</span>
+          </div>
+        </div>
+      </div>
+      <p class="note">Екран активного замовлення. Кнопка одна — та, яку дозволяє стейт-машина для поточного статусу.
+         Фото доставки вантажиться напряму в S3 за presigned-посиланням.</p>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="ph-bar"><span>14:24</span><span>Онлайн · GPS ✓</span></div>
+        <div class="ph-body">
+          <div class="col-head">Мої замовлення <span class="ev">t:{id}:courier:{userId}</span></div>
+          <div class="col-body">
+            <div class="order new" style="border-left-color:var(--violet)">
+              <div class="o-top"><span class="o-num">#0149</span><span class="chip b">новий — прийняти?</span>
+                <span class="o-time">0:38</span></div>
+              <div class="o-addr">вул. Лісова, 12</div>
+              <div class="o-meta"><span>2,1 км · ~11 хв</span></div>
+              <div style="display:flex;gap:8px;margin-top:9px">
+                <button class="btn pri" style="padding:7px">Прийняти</button>
+                <button class="btn" style="padding:7px">Відмова</button>
+              </div>
+            </div>
+            <div class="order route sel">
+              <div class="o-top"><span class="o-num">#0145</span><span class="chip w">у дорозі</span></div>
+              <div class="o-addr">вул. Гагаріна, 7</div>
+              <div class="o-meta"><span>ETA 14:27</span></div>
+            </div>
+            <div class="order done">
+              <div class="o-top"><span class="o-num">#0141</span><span class="chip g">доставлено</span>
+                <span class="o-time">13:52</span></div>
+              <div class="o-addr">вул. Кирилівська, 15</div>
+            </div>
+          </div>
+          <div style="padding:10px 12px;border-top:1px solid var(--line);background:var(--panel-2)">
+            <div class="row"><span>Точок у буфері</span><b style="color:var(--warn)">7 (офлайн)</b></div>
+            <div style="margin-top:6px"><span class="ev up">location.push {points[]}</span></div>
+            <div style="color:var(--dim);font-size:11.5px;margin-top:6px">
+              Батч раз на 10 с · при втраті мережі накопичуються в IndexedDB і досилаються
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">Список замовлень кур'єра. Приходять лише його — кімната
+         <code>t:{tenant}:courier:{userId}</code>, чужі замовлення фізично не долітають.</p>
+    </div>
+
+  </div>
+
+  <div class="hint">
+    <b>Головний ризик цього екрана — поганий зв'язок.</b> Тому: команди ідемпотентні за <code>clientMsgId</code>
+    (подвійний тап «Доставлено» не створить дві події), геоточки буферизуються локально,
+    а при реконекті клієнт надсилає <code>sync.since {seq}</code> і наздоганяє пропущене без перезавантаження.
+  </div>
+</section>
+
+<!-- ══════════════ КЛІЄНТ ══════════════ -->
+<section class="screen" id="cli">
+  <div class="phones">
+    <div>
+      <div class="phone">
+        <div class="ph-bar"><span>14:24</span><span>kvity24.ua/t/a3f9…</span></div>
+        <div class="ph-body">
+          <div class="ph-map" style="height:260px">
+            <svg viewBox="0 0 340 260" preserveAspectRatio="none">
+              <rect width="340" height="260" fill="#0f1621"/>
+              <g stroke="#1b2634" stroke-width="11">
+                <path d="M-10 90 H350"/><path d="M-10 190 H350"/><path d="M100 -10 V270"/><path d="M250 -10 V270"/>
+              </g>
+              <path d="M100 190 L100 90 L250 90" stroke="#22c55e" stroke-width="3" fill="none"/>
+              <path d="M250 90 L300 90 L300 45" stroke="#22c55e" stroke-width="2.5"
+                    stroke-dasharray="6 6" fill="none" opacity=".55"/>
+            </svg>
+            <div class="pin" style="left:73%;top:35%">
+              <span class="pulse"></span>
+              <span class="bubble">🛵 Марія</span>
+            </div>
+            <div class="drop" style="left:88%;top:20%">🏠</div>
+          </div>
+
+          <div class="card" style="text-align:center">
+            <div style="font-size:13px;color:var(--muted)">Замовлення №0145</div>
+            <div style="font-size:26px;font-weight:700;margin:6px 0">Кур'єр у дорозі</div>
+            <div style="color:var(--ok);font-weight:600">Прибуде приблизно о 14:27</div>
+            <div style="margin-top:10px"><span class="ev">track:{publicToken}</span></div>
+          </div>
+
+          <div class="card">
+            <div class="steps">
+              <div class="step done"><span class="bul"></span><div>Замовлення прийнято <span class="t">13:58</span></div></div>
+              <div class="step done"><span class="bul"></span><div>Зібрано <span class="t">14:09</span></div></div>
+              <div class="step now"><span class="bul"></span><div>Кур'єр у дорозі <span class="t">Марія · вело</span></div></div>
+              <div class="step"><span class="bul"></span><div>Доставлено</div></div>
+            </div>
+          </div>
+
+          <div class="chat" style="min-height:180px">
+            <div class="msgs">
+              <div class="m sys">Кур'єр буде приблизно за 9 хвилин</div>
+              <div class="m me"><div class="who">Ви · 14:14</div>Домофон не працює, наберіть</div>
+              <div class="m"><div class="who"><b>Диспетчер</b> · 14:15</div>Передали кур'єру 👌</div>
+            </div>
+            <div class="composer">
+              <input placeholder="Написати…"><button>↑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">Публічне посилання без реєстрації. Живе до +2 годин після доставки.</p>
+    </div>
+
+    <div style="max-width:420px">
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px">
+        <h3 style="margin-bottom:10px">Що клієнту НЕ віддаємо</h3>
+        <div class="row"><span>Телефон кур'єра</span><b style="color:var(--bad)">ні</b></div>
+        <div class="row"><span>Інші замовлення кур'єра</span><b style="color:var(--bad)">ні</b></div>
+        <div class="row"><span>Позиція до статусу «у дорозі»</span><b style="color:var(--bad)">ні</b></div>
+        <div class="row"><span>Собівартість, внутрішні нотатки</span><b style="color:var(--bad)">ні</b></div>
+        <div class="row"><span>Ім'я, транспорт, позиція, ETA</span><b style="color:var(--ok)">так</b></div>
+        <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+        <h3 style="margin-bottom:10px">Токен посилання</h3>
+        <div style="font-family:var(--mono);font-size:11.5px;color:var(--muted);word-break:break-all;
+                    background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px">
+          /t/a3f9c1d8e40b7a25f6c9<br>…opaque, 32 байти, не вгадується
+        </div>
+        <p style="color:var(--muted);font-size:12.5px;margin-top:12px">
+          Окремий rate-limit за IP. Кімната <code>track:{token}</code> отримує
+          урізаний DTO — фільтрація на сервері, а не на фронті.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">
+    <b>Третє з'єднання, третій інстанс.</b> Клієнт не автентифікований, але має бачити той самий статус,
+    що диспетчер і кур'єр — із затримкою в сотні мілісекунд. Саме це і є «неминуча багатоінстансовість»:
+    джерело істини одне, з'єднань три, процесів N.
+  </div>
+</section>
+
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tabs button');
+  tabs.forEach(b => b.onclick = () => {
+    tabs.forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === b.dataset.t));
+  });
+  document.querySelectorAll('#disp .order').forEach(o => o.onclick = () => {
+    document.querySelectorAll('#disp .order').forEach(x => x.classList.remove('sel'));
+    o.classList.add('sel');
+  });
+</script>
+</body>
+</html>
